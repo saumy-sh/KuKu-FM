@@ -111,6 +111,7 @@ Include rich dialogue, setting, and plot advancement.
 {required_character_note}
 If characters are mentioned previously, ensure they are used unless they are dead.
 Introduce new characters only when necessary. Remove characters that were killed.
+Also in title only return the title you have given without episode number.
 
 Return the output in STRICT VALID JSON format without any markdown formatting or triple backticks.
 Escape all newlines inside the "body" field using \\n.

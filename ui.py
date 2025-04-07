@@ -52,9 +52,14 @@ if st.session_state.create_mode:
         no_of_episodes = st.number_input("Number of Episodes", min_value=1, max_value=20, value=2)
         initial_characters = st.text_input("Initial Characters (comma separated)", "jerry, tom")
         trope = st.text_area("Trope", "a house where jerry tries to kill the house master but tom protects the master.")
-        tone = st.selectbox("Tone", ["Comedic", "Dramatic", "Suspenseful", "Fantasy"])
-        style = st.selectbox("Style", ["Third Person", "First Person"])
-
+        tone = st.selectbox("Tone", [
+            "Comedic", "Dramatic", "Suspenseful", "Fantasy", "Romantic", "Dark", 
+            "Inspirational", "Sci-Fi", "Mystery"
+        ])        
+        style = st.selectbox("Style", [
+            "Third Person", "First Person", "Second Person", "Omniscient", 
+            "Script Format", "Diary Entry"
+        ])
         submitted = st.form_submit_button("Generate Story")
 
         if submitted:
@@ -110,6 +115,7 @@ if st.session_state.selected_story:
             with open(episode_file) as f:
                 data = json.load(f)
 
+            st.markdown(f"## 🏷️ Story: *{story_title}*")
             st.subheader(f"📘 {data['title']}")
             st.write(data["body"].replace("\\n", "\n"))
 
