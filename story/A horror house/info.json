@@ -1,0 +1,13 @@
+{
+  "total_episodes": 4,
+  "title": "A horror house",
+  "initial_characters": [
+    "jack",
+    "sam",
+    "dorthy",
+    "frodo"
+  ],
+  "trope": "four kids stumble upon a lonely house and decide to explore it at night. but house turns out to be haunted. then they try to escape it but in the end only frodo gets out alive of the house.",
+  "style": "Third Person",
+  "tone": "Dramatic"
+}
