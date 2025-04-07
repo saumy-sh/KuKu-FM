@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import json
+import shutil
 
 # App title
 st.set_page_config(page_title="AI Storyteller", layout="wide")
@@ -25,9 +26,22 @@ if st.sidebar.button("➕ Create Story", key="sidebar_create_btn"):
     st.session_state.selected_story = None
 
 for story in stories:
-    if st.sidebar.button(story, key=f"story_btn_{story}"):
+    col1, col2 = st.sidebar.columns([4, 1])  # 4:1 ratio
+
+    if col1.button(story, key=f"story_btn_{story}"):
         st.session_state.selected_story = story
         st.session_state.create_mode = False
+
+    if col2.button("🗑️", key=f"delete_{story}"):
+        story_path = os.path.join(STORY_DIR, story)
+        if os.path.exists(story_path):
+            shutil.rmtree(story_path)
+            st.success(f"Story '{story}' deleted.")
+            if st.session_state.selected_story == story:
+                st.session_state.selected_story = None
+
+            
+            st.rerun()
 
 # --- Create story section ---
 if st.session_state.create_mode:
@@ -56,8 +70,9 @@ if st.session_state.create_mode:
                 style=style
             )
             st.success(f"Story '{title}' created successfully!")
-            st.session_state.create_mode = False
-            st.session_state.selected_story = title
+            st.session_state["selected_story"] = title
+            st.session_state["create_mode"] = False
+            st.rerun()
 
 # --- Show selected story episodes ---
 if st.session_state.selected_story:
@@ -88,7 +103,7 @@ if st.session_state.selected_story:
             key=f"select_{story_title}"
         )
 
-        episode_num = int(selected_title.split(":" )[0].replace("Episode ", "").strip())
+        episode_num = int(selected_title.split(":")[0].replace("Episode ", "").strip())
         episode_file = os.path.join(story_path, f"{episode_num}.json")
 
         if os.path.exists(episode_file):

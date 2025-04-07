@@ -49,6 +49,26 @@ def safe_json_parse(response_text):
         print("Returned text was:\n", response_text)
         raise e
 
+# --- OpenAI Summarization ---
+def summarize_with_openai(text):
+    summary_prompt = f"""
+You are an expert story summarizer. Provide a well-written abstract summary of the following story text. 
+Do not just extract sentences—summarize like a human would, preserving key events and emotions.
+
+Text:
+{text[:3000]}  # Limit input to avoid long token usage
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": summary_prompt.strip()}],
+        temperature=0.7,
+        max_tokens=300,
+    )
+    return response.choices[0].message.content.strip()
+
+
+
 # --- T5 Summarization ---
 def summarize_with_t5(text, max_length=150):
     # Use a prompt that signals extractive behavior
@@ -73,14 +93,23 @@ def summarize_with_t5(text, max_length=150):
 
 
 # --- Episode generation using OpenAI ---
-def generate_episode(episode_number, total_episodes, summary_context=None, previous_characters=None, tone="Comedic", trope=None, style="Third Person"):
+def generate_episode(
+    episode_number, total_episodes, summary_context=None, previous_characters=None,
+    tone="Comedic", trope=None, style="Third Person", required_characters=None
+):
+    required_character_note = (
+        f"The following characters **must appear** in this episode: {', '.join(required_characters)}.\n"
+        if required_characters else ""
+    )
+
     system_prompt = f"""
 You are an expert storyteller. The story's trope is {trope if trope else "whatever you like"}.
 Create episode {episode_number} out of {total_episodes} of a long-form story.
 The story genre is {tone}. It follows {style} style.
 Maintain consistency with previous summaries and character arcs.
 Include rich dialogue, setting, and plot advancement.
-If characters are mentioned previously, ensure they are used if required by plot unless they are dead.
+{required_character_note}
+If characters are mentioned previously, ensure they are used unless they are dead.
 Introduce new characters only when necessary. Remove characters that were killed.
 
 Return the output in STRICT VALID JSON format without any markdown formatting or triple backticks.
@@ -120,6 +149,7 @@ Update the current_characters field by removing killed_characters and including 
     return safe_json_parse(result)
 
 
+
       
 
 # --- Parameters ---
@@ -152,10 +182,17 @@ def create_story(title=None, no_of_episodes=1, trope=None, tone="Comedic", style
 
     total_summary = ""
 
-    # Generate first episode
-    story = generate_episode(1, no_of_episodes, trope=trope, tone=tone, style=style)
-    total_summary += summarize_with_t5(story['body'])
-
+    # Generate first episode with required characters
+    story = generate_episode(
+        1, 
+        no_of_episodes,
+        trope=trope,
+        tone=tone,
+        style=style,
+        required_characters=list(initial_characters)
+    )
+    total_summary += summarize_with_openai(story['body'])
+    story["summary_till_now"] = total_summary
     with open(os.path.join(story_folder, "1.json"), "w", encoding="utf-8") as f:
         json.dump(story, f, indent=2)
 
@@ -170,7 +207,7 @@ def create_story(title=None, no_of_episodes=1, trope=None, tone="Comedic", style
             trope=trope,
             style=style
         )
-        total_summary += "\n" + summarize_with_t5(story['body'])
+        total_summary += "\n" + summarize_with_openai(story['body'])
         story["summary_till_now"] = total_summary
 
         with open(os.path.join(story_folder, f"{episode}.json"), "w", encoding="utf-8") as f:
