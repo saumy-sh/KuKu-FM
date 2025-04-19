@@ -119,10 +119,18 @@ def generate_episode(
     tone="Comedic", trope=None, style="Third Person", required_characters=None,
     ended_at=None, regional_setting=None
 ):
-    required_character_note = (
-    f"The following characters **must appear** in this episode: {', '.join(required_characters)}.\n"
-    if required_characters else ""
-    )
+    if required_characters:
+        character_descriptions = "\n".join(
+            f"- {char['name']} ({char['gender']}): {', '.join(char['traits'])}" for char in required_characters
+        )
+        character_note = f"""Characters in this story:\n{character_descriptions}. These characters **must appear** in this episode.\n"""
+    else:
+        character_note = ""
+
+    # required_character_note = (
+    # f"The following characters **must appear** in this episode: {', '.join(required_characters)}.\n"
+    # if required_characters else ""
+    # )
 
     ending_note = (
         "This is the final episode. Provide a satisfying and conclusive ending that resolves all major plotlines, character arcs, and conflicts.\n"
@@ -146,7 +154,7 @@ def generate_episode(
     - Respect and evolve existing character relationships, behaviors, and the tone established so far.
     - Use vivid descriptions, rich dialogues, and evolving conflict.
     - Use only characters that were active previously or new ones introduced meaningfully.
-    {required_character_note}
+    {character_note}
     {regional_setting_note}
     {ending_note}
 

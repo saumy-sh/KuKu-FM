@@ -43,14 +43,51 @@ for story in stories:
             
             st.rerun()
 
+
+# --- create character traits
+# Initialize character list in session state
+if 'character_list' not in st.session_state:
+    st.session_state.character_list = [{"name": "", "gender": "Other", "traits": ""}]
+
+# Function to render character form
+def render_character_form():
+    st.markdown("### 👥 Initial Characters")
+    updated_list = []
+
+    for i, character in enumerate(st.session_state.character_list):
+        cols = st.columns([2, 2, 4, 1])  # name, gender, traits, delete
+        with cols[0]:
+            name = st.text_input("Name", value=character["name"], key=f"name_{i}")
+        with cols[1]:
+            gender = st.selectbox("Gender", ["Male", "Female", "Other"], index=["Male", "Female", "Other"].index(character["gender"]), key=f"gender_{i}")
+        with cols[2]:
+            traits = st.text_input("Characteristics", value=character["traits"], key=f"traits_{i}")
+        with cols[3]:
+            if st.button("🗑️", key=f"delete_{i}_button"):
+                st.session_state.character_list.pop(i)
+                st.rerun()
+
+        updated_list.append({"name": name, "gender": gender, "traits": traits})
+
+    st.session_state.character_list = updated_list
+
+    if st.button("➕ Add Character", key="add_character"):
+        st.session_state.character_list.append({"name": "", "gender": "Other", "traits": ""})
+        st.rerun()
+
+
+
+
+
 # --- Create story section ---
 if st.session_state.create_mode:
     st.header("✍️ Create a New Story")
+    render_character_form()
 
     with st.form("create_story_form"):
         title = st.text_input("Story Title")
         no_of_episodes = st.number_input("Number of Episodes", min_value=1, max_value=20, value=2)
-        initial_characters = st.text_input("Initial Characters (comma separated)", "jerry, tom")
+        # initial_characters = st.text_input("Initial Characters (comma separated)", "jerry, tom")
         trope = st.text_area("Trope", "a house where jerry tries to kill the house master but tom protects the master.")
         regional_setting = st.text_input("Regional Setting", "a small village in Uttar Pradesh") 
         tone = st.selectbox("Tone", [
@@ -66,11 +103,11 @@ if st.session_state.create_mode:
         if submitted:
             from story_generator import create_story
 
-            st.write("⏳ Generating story... this might take a minute.")
+            st.write("⏳ Generating story... this might take few minutes.")
             create_story(
                 title=title,
                 no_of_episodes=no_of_episodes,
-                initial_characters=set([name.strip().lower() for name in initial_characters.split(",")]),
+                initial_characters=st.session_state.character_list,
                 trope=trope,
                 tone=tone,
                 style=style,
