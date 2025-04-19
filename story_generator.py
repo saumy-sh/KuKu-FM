@@ -117,7 +117,7 @@ def summarize_with_t5(text, max_length=150):
 def generate_episode(
     episode_number, total_episodes, summary_context=None, previous_characters=None,
     tone="Comedic", trope=None, style="Third Person", required_characters=None,
-    ended_at=None
+    ended_at=None, regional_setting=None
 ):
     required_character_note = (
     f"The following characters **must appear** in this episode: {', '.join(required_characters)}.\n"
@@ -127,6 +127,10 @@ def generate_episode(
     ending_note = (
         "This is the final episode. Provide a satisfying and conclusive ending that resolves all major plotlines, character arcs, and conflicts.\n"
         if episode_number == total_episodes else "End the episode with a suspenseful or emotional cliffhanger to encourage continued interest.\n"
+    )
+
+    regional_setting_note = (
+        f"The story is set in: **{regional_setting}**.\n" if regional_setting else ""
     )
 
     system_prompt = f"""
@@ -143,6 +147,7 @@ def generate_episode(
     - Use vivid descriptions, rich dialogues, and evolving conflict.
     - Use only characters that were active previously or new ones introduced meaningfully.
     {required_character_note}
+    {regional_setting_note}
     {ending_note}
 
     Additional Requirements:
@@ -163,6 +168,7 @@ def generate_episode(
     }}
     """
 
+
     user_prompt = f"""
     Episode Number: {episode_number}
     Previous Episode Summary: {summary_context if summary_context else 'No context available'}
@@ -171,8 +177,6 @@ def generate_episode(
 
     Write a connected, coherent episode of around 600–800 words, directly continuing the previous one.
     """
-
-
 
     response = client.chat.completions.create(
         model="gpt-4",
@@ -196,7 +200,7 @@ def generate_episode(
 
 # --- Story creation with multiple episodes functionality ---
 
-def create_story(title=None, no_of_episodes=1, trope=None, tone="Comedic", style="Third Person", initial_characters=None):
+def create_story(title=None, no_of_episodes=1, trope=None, tone="Comedic", style="Third Person", initial_characters=None, regional_setting=None):
     story_root = "story"
     story_folder = os.path.join(story_root, title)
     os.makedirs(story_folder, exist_ok=True)
@@ -207,7 +211,8 @@ def create_story(title=None, no_of_episodes=1, trope=None, tone="Comedic", style
         'initial_characters': list(initial_characters),
         'trope': trope,
         'style': style,
-        'tone': tone
+        'tone': tone,
+        'regional_setting':regional_setting
     }
 
     with open(os.path.join(story_folder, "info.json"), "w", encoding="utf-8") as f:
@@ -224,7 +229,8 @@ def create_story(title=None, no_of_episodes=1, trope=None, tone="Comedic", style
         tone=tone,
         style=style,
         required_characters=list(initial_characters),
-        ended_at=last_ended_at
+        ended_at=last_ended_at,
+        regional_setting=regional_setting
     )
     total_summary = summarize_with_openai(story['body'])
     story["summary_till_now"] = total_summary
@@ -243,7 +249,8 @@ def create_story(title=None, no_of_episodes=1, trope=None, tone="Comedic", style
             tone=tone,
             trope=trope,
             style=style,
-            ended_at=last_ended_at
+            ended_at=last_ended_at,
+            regional_setting=regional_setting
         )
         total_summary += "\n" + summarize_with_openai(story['body'])
         story["summary_till_now"] = total_summary

@@ -52,6 +52,7 @@ if st.session_state.create_mode:
         no_of_episodes = st.number_input("Number of Episodes", min_value=1, max_value=20, value=2)
         initial_characters = st.text_input("Initial Characters (comma separated)", "jerry, tom")
         trope = st.text_area("Trope", "a house where jerry tries to kill the house master but tom protects the master.")
+        regional_setting = st.text_input("Regional Setting", "a small village in Uttar Pradesh") 
         tone = st.selectbox("Tone", [
             "Comedic", "Dramatic", "Suspenseful", "Fantasy", "Romantic", "Dark", 
             "Inspirational", "Sci-Fi", "Mystery"
@@ -72,7 +73,8 @@ if st.session_state.create_mode:
                 initial_characters=set([name.strip().lower() for name in initial_characters.split(",")]),
                 trope=trope,
                 tone=tone,
-                style=style
+                style=style,
+                regional_setting=regional_setting
             )
             st.success(f"Story '{title}' created successfully!")
             st.session_state["selected_story"] = title
