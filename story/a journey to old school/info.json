@@ -1,0 +1,20 @@
+{
+  "total_episodes": 2,
+  "title": "a journey to old school",
+  "initial_characters": [
+    {
+      "name": "saumy",
+      "gender": "Male",
+      "traits": "courageous, helpful,caring"
+    },
+    {
+      "name": "bhanu",
+      "gender": "Male",
+      "traits": "weak, supportive, fearfull"
+    }
+  ],
+  "trope": "two friends who have studied in same school since nursery now reunite on alumni meet at school but strange things start happening at the school. there meet turns into horror",
+  "style": "Third Person",
+  "tone": "Dark",
+  "regional_setting": "a small village in Uttar Pradesh"
+}

@@ -1,0 +1,30 @@
+{
+  "total_episodes": 3,
+  "title": "A funny day at college",
+  "initial_characters": [
+    {
+      "name": "saumy",
+      "gender": "Male",
+      "traits": "courageous, helpful,caring"
+    },
+    {
+      "name": "bhanu",
+      "gender": "Male",
+      "traits": "weak, supportive, strong"
+    },
+    {
+      "name": "vansh",
+      "gender": "Male",
+      "traits": "stutters a lot, helpful, supportive"
+    },
+    {
+      "name": "aayush",
+      "gender": "Male",
+      "traits": "fat, friendly, fearfull"
+    }
+  ],
+  "trope": "four friends at college decide to drink at night to celebrate semester ending before going home. But to bring alcohol inside hostel is a sketchy part and various things happen",
+  "style": "First Person",
+  "tone": "Comedic",
+  "regional_setting": "a college in Bangalore urban"
+}
