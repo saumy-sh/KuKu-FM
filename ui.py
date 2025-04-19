@@ -15,10 +15,20 @@ if 'create_mode' not in st.session_state:
     st.session_state.create_mode = False
 if 'selected_story' not in st.session_state:
     st.session_state.selected_story = None
+if 'deleted_stories' not in st.session_state:
+    st.session_state.deleted_stories = set()
+
 
 # Sidebar: Story titles + Create Story button
 st.sidebar.title("📚 Stories")
-stories = [d for d in os.listdir(STORY_DIR) if os.path.isdir(os.path.join(STORY_DIR, d))]
+
+# Track deleted stories in session
+if 'deleted_stories' not in st.session_state:
+    st.session_state.deleted_stories = set()
+
+# Read all story folders
+all_stories = [d for d in os.listdir(STORY_DIR) if os.path.isdir(os.path.join(STORY_DIR, d))]
+stories = [s for s in all_stories if s not in st.session_state.deleted_stories]
 stories.sort()
 
 if st.sidebar.button("➕ Create Story", key="sidebar_create_btn"):
@@ -33,15 +43,11 @@ for story in stories:
         st.session_state.create_mode = False
 
     if col2.button("🗑️", key=f"delete_{story}"):
-        story_path = os.path.join(STORY_DIR, story)
-        if os.path.exists(story_path):
-            shutil.rmtree(story_path)
-            st.success(f"Story '{story}' deleted.")
-            if st.session_state.selected_story == story:
-                st.session_state.selected_story = None
+        st.session_state.deleted_stories.add(story)
+        if st.session_state.selected_story == story:
+            st.session_state.selected_story = None
+        st.rerun()
 
-            
-            st.rerun()
 
 
 # --- create character traits
