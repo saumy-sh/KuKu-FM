@@ -39,36 +39,57 @@ def extract_characters(text, existing_characters=None, killed_characters=None):
 
 # --- Safe JSON Parsing ---
 def safe_json_parse(response_text):
-    response_text = response_text.strip().strip("`")
-    response_text = re.sub(r'(?<!\\)\n', '\\n', response_text)
-    response_text = response_text.replace("“", "\"").replace("”", "\"")
     try:
         return json.loads(response_text)
     except json.JSONDecodeError as e:
-        print("⚠️ Failed to parse GPT response into JSON.")
-        print("Returned text was:\n", response_text)
-        raise e
+        # Attempt to fix unescaped backslashes
+        fixed = re.sub(r'(?<!\\)\\(?![\\nrt"])', r'\\\\', response_text)
+        try:
+            return json.loads(fixed)
+        except Exception as e2:
+            print("Failed JSON:", fixed[:500])
+            raise e2  # Re-raise if still failing
 
 # --- OpenAI Summarization ---
-def summarize_with_openai(text):
-    summary_prompt = f"""
-You are an expert story summarizer. Provide a well-written abstract summary of the following story text. 
+def summarize_with_openai(text, previous_summary=None):
+    if previous_summary:
+        summary_prompt = f"""
+You are an expert story summarizer. Continue building on the previous episode's summary in a natural and seamless way.
+Merge the important events and emotional highlights from the current story text with the previous summary to form one continuous narrative.
+
+Previous Summary:
+{previous_summary}
+
+Current Episode Text:
+{text[:3000]}  # Truncated to avoid token overuse
+
+Return a single, flowing summary that reads like one continuous abstract.
+"""
+    else:
+        summary_prompt = f"""
+You are an expert story summarizer. Provide a well-written abstract summary of the following story text.
 Do not just extract sentences—summarize like a human would, preserving key events and emotions.
 
-Text:
-{text[:3000]}  # Limit input to avoid long token usage
+Current Episode Text:
+{text[:3000]}  # Truncated to avoid token overuse
+
+Return a rich summary that captures the essence of this episode.
 """
 
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": summary_prompt.strip()}],
-        temperature=0.7,
-        max_tokens=300,
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are a highly skilled narrative summarizer."},
+            {"role": "user", "content": summary_prompt}
+        ],
+        temperature=0.7
     )
+
     return response.choices[0].message.content.strip()
 
 
 
+# deprecated right now
 # --- T5 Summarization ---
 def summarize_with_t5(text, max_length=150):
     # Use a prompt that signals extractive behavior
@@ -95,46 +116,63 @@ def summarize_with_t5(text, max_length=150):
 # --- Episode generation using OpenAI ---
 def generate_episode(
     episode_number, total_episodes, summary_context=None, previous_characters=None,
-    tone="Comedic", trope=None, style="Third Person", required_characters=None
+    tone="Comedic", trope=None, style="Third Person", required_characters=None,
+    ended_at=None
 ):
     required_character_note = (
-        f"The following characters **must appear** in this episode: {', '.join(required_characters)}.\n"
-        if required_characters else ""
+    f"The following characters **must appear** in this episode: {', '.join(required_characters)}.\n"
+    if required_characters else ""
+    )
+
+    ending_note = (
+        "This is the final episode. Provide a satisfying and conclusive ending that resolves all major plotlines, character arcs, and conflicts.\n"
+        if episode_number == total_episodes else "End the episode with a suspenseful or emotional cliffhanger to encourage continued interest.\n"
     )
 
     system_prompt = f"""
-You are an expert storyteller. The story's trope is {trope if trope else "whatever you like"}.
-Create episode {episode_number} out of {total_episodes} of a long-form story.
-The story genre is {tone}. It follows {style} style.
-Maintain consistency with previous summaries and character arcs.
-Include rich dialogue, setting, and plot advancement.
-{required_character_note}
-If characters are mentioned previously, ensure they are used unless they are dead.
-Introduce new characters only when necessary. Remove characters that were killed.
-Also in title only return the title you have given without episode number.
+    You are a master storyteller creating episode {episode_number} of a {total_episodes}-episode long-form narrative.
+    The story follows the genre: **{tone}**, in **{style}** style.
+    The central story trope is: **{trope if trope else 'your choice'}**.
+    Your task is to ensure deep narrative consistency, emotional weight, and evolving character dynamics.
 
-Return the output in STRICT VALID JSON format without any markdown formatting or triple backticks.
-Escape all newlines inside the "body" field using \\n.
+    Rules:
+    - The episode **must pick up exactly where the previous episode left off**, continuing the scene or event if applicable.
+    - **Do NOT resurrect dead characters** from earlier episodes unless there’s a well-written and justified twist.
+    - Ensure previously killed characters remain absent unless their return is critical and logically explained.
+    - Respect and evolve existing character relationships, behaviors, and the tone established so far.
+    - Use vivid descriptions, rich dialogues, and evolving conflict.
+    - Use only characters that were active previously or new ones introduced meaningfully.
+    {required_character_note}
+    {ending_note}
 
-JSON format:
-{{
-  "title": "...",
-  "body": "...",
-  "killed_characters": ["..."],
-  "current_characters": ["..."]
-}}
+    Additional Requirements:
+    - At the end of the episode, extract the final one or two lines of the story and include it in a new field called "ended_at".
+    - These lines should be exactly as written in the story and will be used to help the next episode start from the same point.
+    - Ensure "ended_at" does not contain any commentary or summarization — just raw story lines from the episode's ending.
 
-Always try to end the episode with a cliffhanger if possible.
-"""
+    Return ONLY a JSON object in the following STRICT format. No markdown, no text, no commentary, no triple backticks.
+    Escape newlines using \\n inside the "body" and "ended_at" fields.
+
+    JSON format:
+    {{
+    "title": "A short, catchy episode title WITHOUT the word 'Episode'",
+    "body": "The actual episode content here. Use \\n for newlines.",
+    "killed_characters": ["List of characters who died in this episode, if any"],
+    "current_characters": ["All currently alive characters at the end of this episode"],
+    "ended_at": "Last 1-2 lines of the story content. Use \\n for newlines."
+    }}
+    """
 
     user_prompt = f"""
-Episode Number: {episode_number}
-Previous Summary: {summary_context if summary_context else "no context"}
-Characters So Far: {previous_characters if previous_characters else 'N/A'}
+    Episode Number: {episode_number}
+    Previous Episode Summary: {summary_context if summary_context else 'No context available'}
+    Characters Alive So Far: {previous_characters if previous_characters else 'N/A'}
+    Story Ended Previously At: {ended_at if ended_at else 'N/A'}
 
-Write an episode of around 500–800 words. Maintain narrative consistency.
-Update the current_characters field by removing killed_characters and including any new ones introduced in this episode.
-"""
+    Write a connected, coherent episode of around 600–800 words, directly continuing the previous one.
+    """
+
+
 
     response = client.chat.completions.create(
         model="gpt-4",
@@ -153,14 +191,8 @@ Update the current_characters field by removing killed_characters and including 
 
       
 
-# --- Parameters ---
-no_of_episodes = 2
-title = "A Rat and a Cat"
-initial_characters = set(["jerry", "tom"])
-trope = "a house where jerry tries to kill the house master but tom protects the master."
-tone = "Comedic"
-style = "Third Person"
-total_summary = ""
+
+
 
 # --- Story creation with multiple episodes functionality ---
 
@@ -182,34 +214,40 @@ def create_story(title=None, no_of_episodes=1, trope=None, tone="Comedic", style
         json.dump(info, f, indent=2)
 
     total_summary = ""
+    last_ended_at = None
 
     # Generate first episode with required characters
     story = generate_episode(
-        1, 
-        no_of_episodes,
+        episode_number=1,
+        total_episodes=no_of_episodes,
         trope=trope,
         tone=tone,
         style=style,
-        required_characters=list(initial_characters)
+        required_characters=list(initial_characters),
+        ended_at=last_ended_at
     )
-    total_summary += summarize_with_openai(story['body'])
+    total_summary = summarize_with_openai(story['body'])
     story["summary_till_now"] = total_summary
+    last_ended_at = story.get("ended_at", None)
+
     with open(os.path.join(story_folder, "1.json"), "w", encoding="utf-8") as f:
         json.dump(story, f, indent=2)
 
     # Loop for remaining episodes
     for episode in range(2, no_of_episodes + 1):
         story = generate_episode(
-            episode,
-            no_of_episodes,
+            episode_number=episode,
+            total_episodes=no_of_episodes,
             summary_context=total_summary,
             previous_characters=story["current_characters"],
             tone=tone,
             trope=trope,
-            style=style
+            style=style,
+            ended_at=last_ended_at
         )
         total_summary += "\n" + summarize_with_openai(story['body'])
         story["summary_till_now"] = total_summary
+        last_ended_at = story.get("ended_at", None)
 
         with open(os.path.join(story_folder, f"{episode}.json"), "w", encoding="utf-8") as f:
             json.dump(story, f, indent=2)
