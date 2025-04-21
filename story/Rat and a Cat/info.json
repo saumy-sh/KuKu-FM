@@ -1,0 +1,20 @@
+{
+  "total_episodes": 2,
+  "title": "Rat and a Cat",
+  "initial_characters": [
+    {
+      "name": "Tom",
+      "gender": "Male",
+      "traits": "Cat, lean, stammer, dumb"
+    },
+    {
+      "name": "jerry",
+      "gender": "Male",
+      "traits": "Rat, fast, cunning"
+    }
+  ],
+  "trope": "a house where jerry tries to kill the house master but tom protects the master.",
+  "style": "Third Person",
+  "tone": "Comedic",
+  "regional_setting": "a small village in Uttar Pradesh"
+}
