@@ -75,7 +75,7 @@ Create rich, multi-episode stories powered by GPT-4 with consistent characters, 
     ```
 5. **Launch the Application**
     ```bash
-    streamlit run ui.py
+    streamlit run main.py
     ```
 
 You can access the app at following link:
@@ -85,7 +85,7 @@ http://localhost:8501
 To stop the app just press Ctrl+C
 
 
-###  How It Works
+###  How It Works (Some more functions have been introduced will be updated later)
 - The app collects user inputs: characters, trope, tone, number of episodes, etc.
 - From backend we call `create_story()` function which passes the required arguments and generates outputs using `generate_episode()` and `summarize_with_openai()` functions.
 - `generate_episode()` uses GPT-4 to create JSON-formatted episodes, tracking character presence and deaths.

@@ -1,0 +1,20 @@
+{
+  "total_episodes": 3,
+  "title": "A quest for the golden egg",
+  "initial_characters": [
+    {
+      "name": "jareth",
+      "gender": "Male",
+      "traits": "adventurous, brave"
+    },
+    {
+      "name": "Judy",
+      "gender": "Female",
+      "traits": "caring, loving"
+    }
+  ],
+  "trope": "two friends get to know about golden egg somewhere in the mountain. They start their adventure but face many challenges.",
+  "style": "First Person",
+  "tone": "Fantasy",
+  "regional_setting": "a mountain in South Africa"
+}

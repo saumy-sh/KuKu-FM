@@ -1,0 +1,20 @@
+{
+  "total_episodes": 2,
+  "title": "Someone for Everyone",
+  "initial_characters": [
+    {
+      "name": "jimmy",
+      "gender": "Male",
+      "traits": "timid, lonely, introvert"
+    },
+    {
+      "name": "jacob",
+      "gender": "Male",
+      "traits": "extrovert, friendly"
+    }
+  ],
+  "trope": "jimmy struggles to make friends at school but one day he meets jacob and it changes everything.",
+  "style": "Script Format",
+  "tone": "Inspirational",
+  "regional_setting": "a school at Mumbai"
+}

@@ -1,0 +1,20 @@
+{
+  "total_episodes": 2,
+  "title": " a tale of two boys",
+  "initial_characters": [
+    {
+      "name": "jerry",
+      "gender": "Male",
+      "traits": "helpful,caring"
+    },
+    {
+      "name": "jacob",
+      "gender": "Male",
+      "traits": "stutters, brave"
+    }
+  ],
+  "trope": "story of two friends who reach a mysterious place",
+  "style": "Third Person",
+  "tone": "Suspenseful",
+  "regional_setting": "a small town in Maharashtra"
+}
