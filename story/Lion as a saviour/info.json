@@ -1,0 +1,15 @@
+{
+  "total_episodes": 2,
+  "title": "Lion as a saviour",
+  "initial_characters": [
+    {
+      "name": "Saumy",
+      "gender": "Male",
+      "traits": "Lion"
+    }
+  ],
+  "trope": "Lion saves the village .",
+  "style": "Script Format",
+  "tone": "Comedic",
+  "regional_setting": "a small village in Uttar Pradesh"
+}

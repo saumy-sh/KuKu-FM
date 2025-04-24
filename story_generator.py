@@ -79,7 +79,17 @@ def generate_episode(
  
     system_prompt = f"""
     You are a master storyteller creating episode {episode_number} of a {total_episodes}-episode long-form narrative.
-    The story follows the genre: **{tone}**, in **{style}** style.
+    The story(body's value in the json) should follow these strictly :
+        -   the genre should be **{tone}** 
+        -   the style should be **{style}** 
+        # Style descriptions:
+        # - Third Person: Narrated by an outside observer, using 'he', 'she', or 'they'.
+        # - First Person: Told from a character's perspective, using 'I' and 'me'.
+        # - Second Person: Puts the reader into the story using 'you', creating an immersive experience.
+        # - Omniscient: An all-knowing narrator reveals thoughts and actions of all characters.
+        # - Script Format: Structured like a screenplay, with character names followed by their dialogues.
+        # - Diary Entry: Presented as a personal journal or log, expressing the inner thoughts of a character.  
+           
     The central story trope is: **{trope if trope else 'your choice'}**.
     Your task is to ensure deep narrative consistency, emotional weight, and evolving character dynamics.
  
@@ -130,8 +140,9 @@ def generate_episode(
         ],
         temperature=0.9
     )
- 
+    print(style)
     result = response.choices[0].message.content
+    print(result)
     return safe_json_parse(result)
 
 def finalize_story(story_title):

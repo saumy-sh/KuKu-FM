@@ -122,6 +122,7 @@ if st.session_state.create_mode:
             "Third Person", "First Person", "Second Person", "Omniscient",
             "Script Format", "Diary Entry"
         ])
+        
         submitted = st.form_submit_button("Generate Outline")
  
         if submitted:
@@ -205,6 +206,7 @@ if st.session_state.outline_mode:
             st.warning(f"No outline found for Episode {episode_num}")
         # Add a finalize button at the bottom
         if st.button("✅ Finalize Story", key="finalize_story"):
+            
             with st.spinner("⏳ Generating full story from outlines... this might take a few minutes."):
                 finalize_story(story_title)
             
