@@ -34,34 +34,54 @@ def generate_outlines(
     )
     
     system_prompt = f"""
-    You are a master storyteller creating a narrative outline for a {total_episodes}-episode story.
-    The story follows the genre: **{tone}**, in **{style}** style.
-    The central story trope is: **{trope if trope else 'your choice'}**.
-    
-    Rules:
-    - Create a coherent, flowing story arc across all episodes
-    - Each episode outline should be approximately 100 words
-    - Ensure character continuity and logical plot progression
-    - Make each episode build on the previous ones with rising action
-    - Include conflicts, character development, and dramatic moments
-    - Create a satisfying conclusion in the final episode
-    {character_note}
-    {regional_setting_note}
-    
-    Return a JSON object where each key is the episode number (as a string) and 
-    each value is the outline text for that episode.
-    
-    Example format:
+    You are a master storyteller and screenwriter, skilled in narrative arcs and episodic storytelling. Your task is to craft detailed outlines for episodes of a story. These outlines will serve as blueprints for writing full episodes later.
+
+    ### Guidelines:
+    - The story must span a **clear and engaging arc** across all episodes.
+    - Each episodes outline should:
+        - Be **~200 words** max
+        - Begin with a **natural continuation** from the previous episode
+        - Include **conflicts, stakes**, and **key turning points**
+        - Show **character evolution** and emotional development
+        - End with a compelling **cliffhanger**, emotional shift, or resolution to keep momentum
+    - Plot progression must be **logical and cause-effect driven**
+    - Gradually build intensity, with a **major climax** in the penultimate or final episode
+    - Ensure a **satisfying conclusion** in the last episode that ties up major arcs
+    - Maintain consistent **tone, voice, and setting**
+    - Be imaginative, but grounded within the logic and style of the world
+    - Each outline should clearly present the progression of the plot and character arcs .
+
+    ### Output Format:
+    Return a **JSON object** where:
+    - Each key is the episode number (as a string)
+    - Each value is the **episode outline** (max 200 words)
+
+    ### Example:
     {{
-        "1": "Episode 1 outline text...",
-        "2": "Episode 2 outline text...",
-        "3": "Episode 3 outline text..."
+    "1": "Episode 1 outline text...",
+    "2": "Episode 2 outline text...",
+    "3": "Episode 3 outline text..."
     }}
     """
     
     user_prompt = f"""
-    Generate outlines for {total_episodes} episodes that form a coherent narrative arc.
-    Make sure each outline is clear, focused, and contains enough story detail to guide full episode creation later.
+    Generate structured outlines for a {total_episodes}-episode story .
+
+    ### Story Information:
+    - **Genre**: {tone}
+    - **Style**: {style}
+    - **Trope**: {trope if trope else 'Choose an appropriate one'}
+
+    {character_note}
+    {regional_setting_note}
+    
+    Please:
+    - Maintain narrative continuity from episode to episode
+    - Provide sufficient plot and emotional development per episode
+    - Introduce and escalate conflict
+    - Guide characters through internal and external growth
+    - Build toward a climax and satisfying resolution
+    - Keep outlines focused, imaginative, and clear
     """
     
     response = client.chat.completions.create(
@@ -140,35 +160,48 @@ def improve_outline(story_title=None, episode_num=1, feedback=None):
     
     # Get previous episode outlines for context
     previous_outlines = {}
-    for ep in range(1, episode_num + 1):
+    for ep in range(1, episode_num):
         previous_outlines[str(ep)] = outlines[str(ep)]
 
     system_prompt = f"""
-    You are a narrative consultant improving a story outline for episode {episode_num} of a {info['total_episodes']}-episode story.
-    The story follows the genre: **{info['tone']}**, in **{info['style']}** style.
-    The central story trope is: **{info['trope']}**.
-    
-    Your task is to improve the outline for episode {episode_num} based on user feedback, while maintaining consistency with previous episodes.
-    
-    Rules:
-    - Keep the outline to approximately 100 words
-    - Incorporate the user's feedback meaningfully 
-    - Maintain consistent characters, settings, and plot elements from previous episodes
-    - Improve narrative quality, tension, and character development
-    - Return ONLY the improved outline text with no additional commentary
+    You are a professional narrative editor and script consultant.
+
+    Your task is to revise the episode's outline of a serialized story based on user feedback. The story has a defined genre, style, and trope, and you must preserve coherence with the previous episodes and overall story arc.
+
+    ### Your Responsibilities:
+    - Revise the episode outline to **incorporate user feedback** meaningfully and creatively
+    - Ensure consistency with:
+        - **Previous episode outlines** (character arcs, events, tone)
+        - The story’s **genre**, **style**, and **central trope**
+    - Maintain or enhance:
+        - Narrative flow
+        - Character development
+        - Emotional impact or dramatic tension
+    - Keep the outline to approximately **100 words**
+    - Ensure the episode transitions logically from the previous one
+
+    Only return the improved outline **as a single paragraph of text**. Do not include any explanation or metadata.
     """
     
     user_prompt = f"""
-    Previous episode outlines:
+    You are revising **Episode {episode_num}** in a story with the following details:
+
+    ### Story Overview:
+    - **Total Episodes**: {info['total_episodes']}
+    - **Genre**: {info['tone']}
+    - **Style**: {info['style']}
+    - **Central Trope**: {info['trope']}
+
+    ### Previous Episode Outlines:
     {json.dumps(previous_outlines, indent=2)}
-    
-    Current outline for Episode {episode_num}:
-    {outlines[str(episode_num)]}
-    
-    User feedback:
-    {feedback}
-    
-    Please provide an improved outline that addresses this feedback while maintaining story coherence.
+
+    ### Original Outline for Episode {episode_num}:
+    "{outlines[str(episode_num)]}"
+
+    ### User Feedback:
+    "{feedback}"
+
+    Please return an improved version of the episode outline that addresses the feedback while staying faithful to the story so far.
     """
     
     response = client.chat.completions.create(
@@ -217,30 +250,36 @@ def flow_maintainer(story_title=None, modified_episode=1):
             previous_outlines[str(prev_ep)] = outlines[str(prev_ep)]
         
         system_prompt = f"""
-        You are a narrative continuity expert maintaining story flow across episodes.
+        You are a narrative continuity specialist tasked with maintaining consistent story flow across episodes in a multi-part series.
+
         The story follows the genre: **{info['tone']}**, in **{info['style']}** style.
         The central story trope is: **{info['trope']}**.
-        
-        Your task is to review and potentially update episode {ep}'s outline to maintain consistency with the previous episodes,
-        especially since episode {modified_episode} has been modified.
-        
-        Rules:
-        - Keep the outline to approximately 100 words
-        - Ensure logical continuity with all previous episodes
-        - Update character arcs, plot points, and references to match modified earlier content
-        - Preserve the original essence of this episode if possible
-        - Return ONLY the updated outline text with no additional commentary
+
+        Your job is to revise (only if necessary) the outline for Episode {ep} so that it flows logically from all previous episodes, especially Episode {modified_episode}, which has been recently updated based on user feedback.
+
+        Guidelines:
+        - Do NOT rewrite unless continuity, character development, or logic has been broken.
+        - If changes are needed, preserve the soul, theme, tone, and purpose of the original outline.
+        - Keep the new outline to approximately 100 words.
+        - Ensure consistent character motivations, plot logic, and relationship dynamics.
+        - Reflect any major events or consequences from the modified episode in the current one.
+        - Maintain emotional and narrative pacing.
+        - Return **only the updated outline text** with no explanation or commentary.
         """
+
         
         user_prompt = f"""
-        Previous episode outlines (including modifications):
+        The total number of episodes in the story is {info['total_episodes']}.
+
+        Below are all the previous outlines up to Episode {ep}, including modifications made by the user to Episode {modified_episode}:
         {json.dumps(previous_outlines, indent=2)}
-        
+
         Current outline for Episode {ep}:
-        {outlines[str(ep)]}
-        
-        Please update this outline if needed to maintain story flow with previous episodes.
-        If the outline is already consistent, you can leave it unchanged.
+        "{outlines[str(ep)]}"
+
+        Please revise this outline **only if necessary** to ensure smooth narrative flow, consistency in character arcs and events, and logical progression from previous episodes.
+
+        If the current outline already aligns well with prior content, you may return it unchanged.
         """
         
         response = client.chat.completions.create(
